@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TechFest 2026 | Ticket Verification</title>
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.5/dist/ethers.umd.min.js"></script>
+<style>
+:root{--bg:#f4f6fa;--panel:#fff;--text:#172033;--muted:#667085;--line:#e5e9f0;--accent:#6658d3;--soft:#f0efff;--good:#16845b;--bad:#c04444}
+[data-theme=dark]{--bg:#11131a;--panel:#1b1f2a;--text:#f2f4f8;--muted:#a1a8b7;--line:#303747;--accent:#a69bff;--soft:#292641;--good:#54d6a2;--bad:#ff8585}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px Arial,sans-serif}header{display:flex;justify-content:space-between;align-items:center;padding:18px max(5%,calc((100% - 1100px)/2));border-bottom:1px solid var(--line);background:var(--panel)}h1{font-size:20px;margin:0}small,.muted{color:var(--muted)}button{border:0;border-radius:9px;padding:11px 15px;background:var(--accent);color:white;font-weight:600;cursor:pointer}button.secondary{background:var(--soft);color:var(--text);border:1px solid var(--line)}button:disabled{opacity:.5;cursor:not-allowed}main{max-width:1100px;margin:28px auto;padding:0 18px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:16px;margin:20px 0}.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}.card h2{font-size:17px;margin:0 0 15px}label{display:block;font-size:13px;color:var(--muted);margin:12px 0 6px}input{width:100%;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text)}.row{display:flex;gap:8px}.row>*{flex:1}.status{padding:12px;border-radius:9px;background:var(--soft);color:var(--text);margin:14px 0;word-break:break-word}.ticket{border:1px solid var(--line);padding:14px;border-radius:10px;margin:10px 0}.ticket strong{display:block;margin-bottom:5px}.pill{font-size:12px;color:var(--good)}.pill.bad{color:var(--bad)}#wallet{font-size:12px;max-width:220px;overflow-wrap:anywhere}.hidden{display:none}footer{text-align:center;color:var(--muted);padding:25px;font-size:12px}
+</style></head>
+<body>
+<header><div><h1>TechFest 2026</h1><small>Blockchain Event Ticket Verification</small></div><div class="row" style="align-items:center;max-width:390px"><button class="secondary" id="themeBtn">☾ Theme</button><button id="connectBtn">Connect Wallet</button></div></header>
+<main><div class="top"><div><h2 style="margin:0 0 5px">Ticket dashboard</h2><span class="muted">Create, purchase and verify event tickets on Ganache.</span></div><div id="wallet" class="muted">Wallet not connected</div></div>
+<div id="notice" class="status">Connect MetaMask to Ganache Local (Chain ID 1337) to begin.</div>
+<div class="grid">
+<section class="card"><h2>Organizer: Create ticket</h2><label>Event name</label><input id="eventName" placeholder="e.g. TechFest 2026 Entry"><label>Ticket price (ETH)</label><input id="price" type="number" min="0" step="0.001" placeholder="0.01"><button style="margin-top:14px;width:100%" id="createBtn">Create ticket</button><p class="muted">Only the contract organizer can create tickets.</p></section>
+<section class="card"><h2>Verify ticket</h2><label>Ticket ID</label><input id="verifyId" type="number" min="1" placeholder="Enter ticket ID"><button style="margin-top:14px;width:100%" id="verifyBtn">Verify authenticity</button><div id="verifyResult" class="status">Verification result will appear here.</div></section>
+<section class="card"><h2>Network & contract</h2><p class="muted">Network: Ganache Local</p><p class="muted">Chain ID: 1337</p><p class="muted" style="word-break:break-all">Contract: 0x464a4d68c4d14A30825c953f868321c11e8D9cdb</p><button class="secondary" id="refreshBtn">Refresh tickets</button></section>
+</div>
+<section class="card"><div class="top"><h2>Tickets</h2><span class="muted" id="count">Not loaded</span></div><div id="tickets" class="muted">Connect wallet and refresh to load tickets.</div></section>
+<section class="card" style="margin-top:16px"><h2>Recent contract activity</h2><div id="history" class="muted">Activity appears after connecting.</div></section>
+</main><footer>TechFest 2026 · Local Ganache demonstration · Test ETH only</footer>
+<script>
+const ADDRESS="0x464a4d68c4d14A30825c953f868321c11e8D9cdb";
+const ABI=[
+"function organizer() view returns(address)",
+"function ticketCounter() view returns(uint256)",
+"function createTicket(string _eventName,uint256 _price) returns(uint256)",
+"function buyTicket(uint256 _ticketId) payable",
+"function verifyTicket(uint256 _ticketId) view returns(bool)",
+"function useTicket(uint256 _ticketId)",
+"function getTicketDetails(uint256 _ticketId) view returns(uint256 ticketId,string eventName,uint256 originalPrice,address ticketOwner,uint8 status)",
+"event TicketCreated(uint256 ticketId,string eventName,uint256 price)",
+"event TicketPurchased(uint256 ticketId,address buyer,uint256 price)",
+"event TicketUsed(uint256 ticketId)"
+];
+let provider,signer,contract;
+const $=id=>document.getElementById(id);
+function note(s){$("notice").textContent=s}
+function short(a){return a.slice(0,6)+"…"+a.slice(-4)}
+async function connect(){try{
+ if(!window.ethereum)throw Error("MetaMask not detected. Install/enable MetaMask.");
+ await window.ethereum.request({method:"eth_requestAccounts"});
+ provider=new ethers.BrowserProvider(window.ethereum);
+ const net=await provider.getNetwork();
+ if(Number(net.chainId)!==1337)throw Error("Wrong network. In MetaMask select Ganache Local (Chain ID 1337).");
+ signer=await provider.getSigner();contract=new ethers.Contract(ADDRESS,ABI,signer);
+ const addr=await signer.getAddress();$("wallet").textContent=short(addr);$("connectBtn").textContent="Connected";
+ note("Connected to Ganache Local. Wallet: "+addr);await refresh();
+ }catch(e){note(e.shortMessage||e.message||String(e))}}
+async function refresh(){if(!contract)return;try{
+ const n=Number(await contract.ticketCounter());$("count").textContent=n+" ticket(s)";
+ const holder=$("tickets");holder.innerHTML="";
+ if(!n){holder.textContent="No tickets created yet.";return}
+ for(let i=1;i<=n;i++){try{const t=await contract.getTicketDetails(i);const status=["Available","Active","Used","Cancelled"][Number(t.status)]||"Unknown";
+ const div=document.createElement("div");div.className="ticket";
+ const title=document.createElement("strong");title.textContent="#"+i+" · "+t.eventName;
+ const info=document.createElement("div");info.className="muted";info.textContent=ethers.formatEther(t.originalPrice)+" ETH · "+status+" · Owner: "+(t.ticketOwner===ethers.ZeroAddress?"Not purchased":short(t.ticketOwner));
+ div.append(title,info);
+ if(Number(t.status)===0){const b=document.createElement("button");b.textContent="Buy ticket";b.style.marginTop="10px";b.onclick=()=>buy(i,t.originalPrice);div.append(b)}
+ if(Number(t.status)===1){const b=document.createElement("button");b.className="secondary";b.textContent="Mark USED (organizer)";b.style.marginTop="10px";b.onclick=()=>useTicket(i);div.append(b)}
+ holder.append(div);
+ }catch(e){console.error(e)}}
+ await loadHistory();
+ }catch(e){note(e.shortMessage||e.message)}}
+async function create(){try{const name=$("eventName").value.trim(),p=$("price").value;if(!name||!p||Number(p)<=0)throw Error("Enter event name and a price greater than zero.");note("Please confirm ticket creation in MetaMask.");const tx=await contract.createTicket(name,ethers.parseEther(p));await tx.wait();note("Ticket created successfully.");$("eventName").value="";$("price").value="";await refresh()}catch(e){note(e.shortMessage||e.reason||e.message)}}
+async function buy(id,price){try{note("Confirm purchase in MetaMask.");const tx=await contract.buyTicket(id,{value:price});await tx.wait();note("Ticket #"+id+" purchased successfully.");await refresh()}catch(e){note(e.shortMessage||e.reason||e.message)}}
+async function useTicket(id){try{note("Confirm USED status transaction in MetaMask.");const tx=await contract.useTicket(id);await tx.wait();note("Ticket #"+id+" marked USED.");await refresh()}catch(e){note(e.shortMessage||e.reason||e.message)}}
+async function verify(){try{if(!contract)throw Error("Connect wallet first.");const id=Number($("verifyId").value);if(!id)throw Error("Enter a valid ticket ID.");const ok=await contract.verifyTicket(id);$("verifyResult").textContent=ok?"Authentic and ACTIVE ticket.":"Invalid, unused/unpurchased, used or cancelled ticket."; }catch(e){$("verifyResult").textContent=e.shortMessage||e.reason||e.message}}
+async function loadHistory(){try{const events=await contract.queryFilter("*",-10000);$("history").innerHTML="";const recent=events.slice(-8).reverse();if(!recent.length){$("history").textContent="No transactions recorded yet.";return}for(const ev of recent){const d=document.createElement("div");d.className="ticket";d.textContent=ev.fragment.name+" · Block "+ev.blockNumber;$("history").append(d)}}catch(e){$("history").textContent="History will be available after transactions."}}
+$("connectBtn").onclick=connect;$("createBtn").onclick=create;$("verifyBtn").onclick=verify;$("refreshBtn").onclick=refresh;
+$("themeBtn").onclick=()=>{const d=document.documentElement;const t=d.getAttribute("data-theme")==="dark"?"light":"dark";d.setAttribute("data-theme",t);localStorage.setItem("tf-theme",t)};
+document.documentElement.setAttribute("data-theme",localStorage.getItem("tf-theme")||"light");
+if(window.ethereum){window.ethereum.on("accountsChanged",()=>location.reload());window.ethereum.on("chainChanged",()=>location.reload())}
+</script></body></html>
