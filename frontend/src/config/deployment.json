@@ -1,0 +1,14 @@
+{
+  "network": {
+    "name": "Ganache Local",
+    "chainId": null,
+    "rpcUrl": ""
+  },
+  "contract": {
+    "name": "EventTicketVerification",
+    "address": "",
+    "deployerAddress": "",
+    "deploymentBlock": null,
+    "deploymentTxHash": ""
+  }
+}

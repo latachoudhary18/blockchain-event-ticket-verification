@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0f172a">
+  <title>EventTicketVerify</title>
+  <link rel="stylesheet" href="./src/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <h1>EventTicket<span class="highlight">Verify</span></h1>
+        <p class="subtitle">Blockchain-based event ticket verification</p>
+      </div>
+      <div class="wallet-bar">
+        <span id="network-badge" class="badge badge-disconnected">Wallet not connected</span>
+        <span id="wallet-address" class="wallet-address hidden"></span>
+        <button id="connect-wallet-btn" class="btn btn-primary" type="button">Connect MetaMask</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <section id="event-management-section" class="card">
+      <div class="section-header"><h2>Event Management</h2></div>
+      <div id="event-management-content"></div>
+    </section>
+
+    <section id="ticket-purchase-section" class="card">
+      <div class="section-header"><h2>Available Events &amp; Ticket Purchase</h2></div>
+      <div id="ticket-purchase-content"></div>
+    </section>
+
+    <section id="my-tickets-section" class="card">
+      <div class="section-header"><h2>My Tickets &amp; QR Identifier</h2></div>
+      <div id="my-tickets-content"></div>
+    </section>
+
+    <section id="ticket-verification-section" class="card">
+      <div class="section-header"><h2>Ticket Verification &amp; Check-in</h2></div>
+      <div id="ticket-verification-content"></div>
+    </section>
+
+    <section id="dashboard-section" class="card">
+      <div class="section-header">
+        <h2>Contract Statistics</h2>
+        <button id="refresh-dashboard-btn" class="btn btn-secondary btn-sm" type="button">Refresh Stats</button>
+      </div>
+      <div id="dashboard-content"></div>
+    </section>
+
+    <section id="history-section" class="card">
+      <div class="section-header">
+        <h2>Blockchain Event &amp; Transaction History</h2>
+        <button id="refresh-history-btn" class="btn btn-secondary btn-sm" type="button">Refresh Events</button>
+      </div>
+      <div id="history-content"></div>
+    </section>
+  </main>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
