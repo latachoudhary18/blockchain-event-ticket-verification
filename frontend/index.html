@@ -16,13 +16,13 @@
 <div class="grid">
 <section class="card"><h2>Organizer: Create ticket</h2><label>Event name</label><input id="eventName" placeholder="e.g. TechFest 2026 Entry"><label>Ticket price (ETH)</label><input id="price" type="number" min="0" step="0.001" placeholder="0.01"><button style="margin-top:14px;width:100%" id="createBtn">Create ticket</button><p class="muted">Only the contract organizer can create tickets.</p></section>
 <section class="card"><h2>Verify ticket</h2><label>Ticket ID</label><input id="verifyId" type="number" min="1" placeholder="Enter ticket ID"><button style="margin-top:14px;width:100%" id="verifyBtn">Verify authenticity</button><div id="verifyResult" class="status">Verification result will appear here.</div></section>
-<section class="card"><h2>Network & contract</h2><p class="muted">Network: Ganache Local</p><p class="muted">Chain ID: 1337</p><p class="muted" style="word-break:break-all">Contract: 0x464a4d68c4d14A30825c953f868321c11e8D9cdb</p><button class="secondary" id="refreshBtn">Refresh tickets</button></section>
+<section class="card"><h2>Network & contract</h2><p class="muted">Network: Ganache Local</p><p class="muted">Chain ID: 1337</p><p class="muted" style="word-break:break-all">Contract: 0x15c3A0F77DEDA9e8f34201a53be0d0967c0d0134</p><button class="secondary" id="refreshBtn">Refresh tickets</button></section>
 </div>
 <section class="card"><div class="top"><h2>Tickets</h2><span class="muted" id="count">Not loaded</span></div><div id="tickets" class="muted">Connect wallet and refresh to load tickets.</div></section>
 <section class="card" style="margin-top:16px"><h2>Recent contract activity</h2><div id="history" class="muted">Activity appears after connecting.</div></section>
 </main><footer>TechFest 2026 · Local Ganache demonstration · Test ETH only</footer>
 <script>
-const ADDRESS="0x464a4d68c4d14A30825c953f868321c11e8D9cdb";
+const ADDRESS="0x15c3A0F77DEDA9e8f34201a53be0d0967c0d0134";
 const ABI=[
 "function organizer() view returns(address)",
 "function ticketCounter() view returns(uint256)",
